@@ -127,6 +127,28 @@
       padding: 0.2em 0.4em;
     }
 
+    /* ===== 섹션 접기/펼치기 (H2 기준) ===== */
+    .foldable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 26px;
+    }
+    .foldable::after {
+      content: "▾";
+      position: absolute;
+      right: 0;
+      top: 0;
+      opacity: 0.75;
+      transform: translateY(2px);
+    }
+    .foldable.is-collapsed::after {
+      content: "▸";
+    }
+    .section-body.is-collapsed {
+      display: none;
+    }
+
     /* ===== 맨 위로 버튼 ===== */
     .toTop {
       position: fixed;
@@ -322,6 +344,46 @@
       });
     }
 
+    // H2 기준 섹션 접기/펼치기
+    function makeSectionsCollapsible() {
+      const main = document.querySelector(".markdown-body");
+      if (!main) return;
+
+      const headings = Array.from(main.querySelectorAll("h2"));
+      if (!headings.length) return;
+
+      headings.forEach((h2, idx) => {
+        if (h2.dataset.foldable === "1") return;
+        h2.dataset.foldable = "1";
+
+        const body = document.createElement("div");
+        body.className = "section-body";
+
+        let el = h2.nextElementSibling;
+        while (el && el.tagName !== "H2") {
+          const next = el.nextElementSibling;
+          body.appendChild(el);
+          el = next;
+        }
+
+        // 내용이 없으면 적용 X
+        if (!body.childNodes.length) return;
+
+        h2.classList.add("foldable");
+
+        // 기본 상태: 모두 펼침
+        // (원하면 아래 주석 해제해서 첫 섹션만 펼치고 나머지 접기)
+        // if (idx !== 0) { body.classList.add("is-collapsed"); h2.classList.add("is-collapsed"); }
+
+        h2.addEventListener("click", () => {
+          const collapsed = body.classList.toggle("is-collapsed");
+          h2.classList.toggle("is-collapsed", collapsed);
+        });
+
+        h2.insertAdjacentElement("afterend", body);
+      });
+    }
+
     // README 로딩 실패 대비(계속 "불러오는 중" 남는 상황 방지)
     function fallbackIfReadmeMissing() {
       const md = document.getElementById("md");
@@ -352,10 +414,15 @@
       setTimeout(buildTOC, 250);
       setTimeout(buildTOC, 900);
 
+      setTimeout(makeSectionsCollapsible, 250);
+      setTimeout(makeSectionsCollapsible, 900);
+
       setTimeout(fallbackIfReadmeMissing, 2500);
     });
   </script>
 </body>
 </html>
+
+
 
 
