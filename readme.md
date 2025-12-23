@@ -184,12 +184,20 @@ LLM 프로젝트를 진행했고, 숭일로그를 개발 중인 1학년 9반 김
 - 이 모든 기능 구현 이후에 UX/UI 디자인이 필요하다. 보다 나은 프론트엔드를 위해.. 따로 관련 도서 선정해서 읽어 볼 생각이다.
 ## 숭일로그: 개발 중 캡처
 사진으로 보고 싶으실까봐 넣어보았다.
+
+- 숭일로그의 app.py이다. 사실 플라스크는 나도 처음 다뤄보기 때문에 주석을 통해 내용들을 간단히 메모하고 공부하며 개발하고 있다.
+  ![대체 텍스트(Alternative Text)](https://soongilwiki.com/image/70ae25c9951496b127dc6e596cbcc1a4b70594035fda06b5ec4abdcc.png.cache_v1)
+- LLM을 공부하는 폴더이다. 사진은 텍스트 코퍼스 토큰화 작업을 실히사는 모습이다.
+  ![대체 텍스트(Alternative Text)](https://soongilwiki.com/image/db19ea000e2820c242da30936e86a2844afb2695627e4c1492c96c18.png.cache_v1)
+- 실제로 블로그의 뼈대를 잡은 모습이다. 여기까지 지피티의 도움을 받았지만, 다시 공부하며 구조들을 정리할 생각이다.
+  ![대체 텍스트(Alternative Text)](https://soongilwiki.com/image/dcb78b13cc45b8e5e0c1a8005c9c396322dda5c8b9209638281ecb87.png.cache_v1)
 ## 협업 문의
 관심이 있다면 협업도 얼마든지 환영한다. 
 개발 자체는 현재 파이썬을 기반으로 진행하고 있다. (Flask라는 웹 프레임워크를 이용하여 개발 중이다.)
 
 문의 이메일
 - kimjw6105@naver.com
+
 
 
 
