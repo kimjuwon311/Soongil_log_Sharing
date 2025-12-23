@@ -187,7 +187,7 @@ LLM 프로젝트를 진행했고, 숭일로그를 개발 중인 1학년 9반 김
 
 - 숭일로그의 app.py이다. 사실 플라스크는 나도 처음 다뤄보기 때문에 주석을 통해 내용들을 간단히 메모하고 공부하며 개발하고 있다.
   ![대체 텍스트(Alternative Text)](https://soongilwiki.com/image/70ae25c9951496b127dc6e596cbcc1a4b70594035fda06b5ec4abdcc.png.cache_v1)
-- LLM을 공부하는 폴더이다. 사진은 텍스트 코퍼스 토큰화 작업을 실히사는 모습이다.
+- LLM을 공부하는 폴더이다. 사진은 텍스트 코퍼스 토큰화 작업을 실시하는 모습이다.
   ![대체 텍스트(Alternative Text)](https://soongilwiki.com/image/db19ea000e2820c242da30936e86a2844afb2695627e4c1492c96c18.png.cache_v1)
 - 실제로 블로그의 뼈대를 잡은 모습이다. 여기까지 지피티의 도움을 받았지만, 다시 공부하며 구조들을 정리할 생각이다.
   ![대체 텍스트(Alternative Text)](https://soongilwiki.com/image/dcb78b13cc45b8e5e0c1a8005c9c396322dda5c8b9209638281ecb87.png.cache_v1)
@@ -197,6 +197,7 @@ LLM 프로젝트를 진행했고, 숭일로그를 개발 중인 1학년 9반 김
 
 문의 이메일
 - kimjw6105@naver.com
+
 
 
 
