@@ -77,9 +77,33 @@
       box-sizing: border-box;
       margin: 0 0 18px;
     }
+    .toc-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
     .toc-title {
       font-weight: 800;
-      margin-bottom: 10px;
+      margin: 0;
+    }
+    .toc-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .toc-btn {
+      border: 1px solid rgba(0,0,0,.12);
+      background: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+    .toc-btn:hover {
+      filter: brightness(0.98);
     }
     .toc-list {
       margin: 0;
@@ -132,19 +156,35 @@
       cursor: pointer;
       user-select: none;
       position: relative;
-      padding-right: 26px;
+      padding-right: 54px; /* 배지 공간 확보 */
     }
+
+    /* 아이콘을 "배지"로 만들어 가시성 확 올리기 */
     .foldable::after {
-      content: "▾";
+      content: "접기";
       position: absolute;
       right: 0;
       top: 0;
-      opacity: 0.75;
       transform: translateY(2px);
+      font-size: 0.82rem;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,.14);
+      background: rgba(0,0,0,.03);
+      opacity: 0.95;
     }
+
     .foldable.is-collapsed::after {
-      content: "▸";
+      content: "펼치기";
+      background: rgba(0,0,0,.06);
     }
+
+    /* 접혔을 때 헤딩도 살짝 톤 다운 + 점선 강조 */
+    .foldable.is-collapsed {
+      opacity: 0.92;
+    }
+
     .section-body.is-collapsed {
       display: none;
     }
@@ -161,7 +201,7 @@
       cursor: pointer;
       display: none;
       z-index: 9999;
-      font-weight: 700;
+      font-weight: 800;
     }
 
     /* ===============================
@@ -186,6 +226,12 @@
         box-shadow: none;
       }
 
+      .toc-btn {
+        background: #161b22;
+        color: #c9d1d9;
+        border-color: rgba(255,255,255,.14);
+      }
+
       .markdown-body {
         background: #161b22;
         box-shadow: none;
@@ -197,6 +243,14 @@
 
       .markdown-body h2 {
         border-top-color: rgba(255,255,255,0.10);
+      }
+
+      .foldable::after {
+        border-color: rgba(255,255,255,.16);
+        background: rgba(255,255,255,.06);
+      }
+      .foldable.is-collapsed::after {
+        background: rgba(255,255,255,.10);
       }
 
       .toTop {
@@ -227,6 +281,12 @@
         border-radius: 10px;
       }
 
+      .toc-btn {
+        padding: 7px 9px;
+        border-radius: 9px;
+        font-size: 0.9rem;
+      }
+
       .markdown-body {
         padding: 24px 18px;
         border-radius: 10px;
@@ -239,6 +299,10 @@
       .markdown-body pre {
         padding: 14px;
         overflow-x: auto;
+      }
+
+      .foldable {
+        padding-right: 64px; /* 모바일에서 배지 더 여유 */
       }
     }
   </style>
@@ -262,7 +326,13 @@
 
     <!-- 목차 -->
     <nav id="toc" class="toc" aria-label="목차">
-      <div class="toc-title">목차</div>
+      <div class="toc-head">
+        <div class="toc-title">목차</div>
+        <div class="toc-actions">
+          <button class="toc-btn" id="expandAll" type="button">모두 펼치기</button>
+          <button class="toc-btn" id="collapseAll" type="button">모두 접기</button>
+        </div>
+      </div>
       <ol class="toc-list"></ol>
     </nav>
 
@@ -287,6 +357,13 @@
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-");
 
+    function smoothScrollTo(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      history.replaceState(null, "", "#" + id);
+    }
+
     function buildTOC() {
       const tocWrap = document.getElementById("toc");
       const toc = document.querySelector("#toc .toc-list");
@@ -310,7 +387,6 @@
         let id = h.id || slugify(h.textContent);
         if (!id) id = "sec-" + Math.random().toString(36).slice(2);
 
-        // 중복이면 숫자 붙이기
         let base = id;
         let n = 2;
         while (used.has(id) || document.getElementById(id)) {
@@ -331,20 +407,17 @@
         toc.appendChild(li);
       });
 
-      // 부드러운 스크롤
+      // TOC 클릭 시 부드러운 스크롤
       document.querySelectorAll('#toc a').forEach(a => {
         a.addEventListener('click', (e) => {
           e.preventDefault();
           const id = a.getAttribute('href').slice(1);
-          const el = document.getElementById(id);
-          if (!el) return;
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          history.replaceState(null, "", "#" + id);
+          smoothScrollTo(id);
         });
       });
     }
 
-    // H2 기준 섹션 접기/펼치기
+    // H2 기준 섹션 접기/펼치기: h2 ~ 다음 h2 전까지를 section-body로 래핑
     function makeSectionsCollapsible() {
       const main = document.querySelector(".markdown-body");
       if (!main) return;
@@ -352,7 +425,8 @@
       const headings = Array.from(main.querySelectorAll("h2"));
       if (!headings.length) return;
 
-      headings.forEach((h2, idx) => {
+      headings.forEach((h2) => {
+        // 이미 처리된 헤딩은 스킵
         if (h2.dataset.foldable === "1") return;
         h2.dataset.foldable = "1";
 
@@ -371,16 +445,27 @@
 
         h2.classList.add("foldable");
 
-        // 기본 상태: 모두 펼침
-        // (원하면 아래 주석 해제해서 첫 섹션만 펼치고 나머지 접기)
-        // if (idx !== 0) { body.classList.add("is-collapsed"); h2.classList.add("is-collapsed"); }
-
+        // 클릭 토글
         h2.addEventListener("click", () => {
           const collapsed = body.classList.toggle("is-collapsed");
           h2.classList.toggle("is-collapsed", collapsed);
         });
 
         h2.insertAdjacentElement("afterend", body);
+      });
+    }
+
+    // 모두 펼치기/접기 (H2 섹션 기준)
+    function setAllSections(collapsed) {
+      const main = document.querySelector(".markdown-body");
+      if (!main) return;
+
+      const h2s = main.querySelectorAll("h2.foldable");
+      h2s.forEach(h2 => {
+        const body = h2.nextElementSibling;
+        if (!body || !body.classList || !body.classList.contains("section-body")) return;
+        body.classList.toggle("is-collapsed", collapsed);
+        h2.classList.toggle("is-collapsed", collapsed);
       });
     }
 
@@ -408,14 +493,21 @@
     });
     btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 
-    // md-block 렌더가 비동기라서 여러 번 갱신
-    window.addEventListener("load", () => {
-      buildTOC();
-      setTimeout(buildTOC, 250);
-      setTimeout(buildTOC, 900);
+    // TOC 버튼
+    document.getElementById("expandAll").addEventListener("click", () => setAllSections(false));
+    document.getElementById("collapseAll").addEventListener("click", () => setAllSections(true));
 
-      setTimeout(makeSectionsCollapsible, 250);
-      setTimeout(makeSectionsCollapsible, 900);
+    // md-block 렌더 타이밍 때문에 여러 번 초기화
+    function initEnhancements() {
+      buildTOC();
+      makeSectionsCollapsible();
+    }
+
+    window.addEventListener("load", () => {
+      initEnhancements();
+      setTimeout(initEnhancements, 250);
+      setTimeout(initEnhancements, 900);
+      setTimeout(initEnhancements, 1600);
 
       setTimeout(fallbackIfReadmeMissing, 2500);
     });
