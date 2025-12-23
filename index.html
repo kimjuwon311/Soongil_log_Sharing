@@ -14,7 +14,7 @@
   <meta property="og:image"
         content="https://chatgpt.com/backend-api/estuary/content?id=file_00000000d6907208be135f012806233a&ts=490673&p=fs&cid=1&sig=a5174db642f800fbab811c3ed7f9f3167d1c20b1722077981d9b99b31d45db77&v=0">
   <meta property="og:url"
-        content="https://SOONGILLOG-init.netlify.app/">
+        content="https://soongillog-init.netlify.app/">
 
   <!-- md-block -->
   <script type="module" src="https://md-block.verou.me/md-block.js"></script>
@@ -47,7 +47,7 @@
     }
 
     header {
-      margin-bottom: 32px;
+      margin-bottom: 18px;
     }
 
     .project-title {
@@ -68,12 +68,45 @@
       color: #6e7781;
     }
 
+    /* ===== 목차(TOC) ===== */
+    .toc {
+      background: #ffffff;
+      padding: 16px 18px;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+      box-sizing: border-box;
+      margin: 0 0 18px;
+    }
+    .toc-title {
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .toc-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .toc a {
+      text-decoration: none;
+      color: inherit;
+    }
+    .toc a:hover {
+      text-decoration: underline;
+    }
+    .toc .lvl-3 {
+      margin-left: 14px;
+      font-size: 0.95em;
+      opacity: 0.9;
+      list-style-type: circle;
+    }
+
+    /* ===== 본문 카드 ===== */
     .markdown-body {
       background: #ffffff;
       padding: 40px;
       border-radius: 14px;
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
       box-sizing: border-box;
+      scroll-margin-top: 16px;
     }
 
     .markdown-body p {
@@ -81,14 +114,32 @@
       line-height: 1.8;
     }
 
+    /* 섹션 구분 강화 */
     .markdown-body h2 {
       margin-top: 2.2em;
+      padding-top: 12px;
+      border-top: 1px solid rgba(0,0,0,0.08);
     }
 
     .markdown-body code {
       background: #f1f3f5;
       border-radius: 6px;
       padding: 0.2em 0.4em;
+    }
+
+    /* ===== 맨 위로 버튼 ===== */
+    .toTop {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,.12);
+      background: #ffffff;
+      cursor: pointer;
+      display: none;
+      z-index: 9999;
+      font-weight: 700;
     }
 
     /* ===============================
@@ -108,6 +159,11 @@
         color: #7d8590;
       }
 
+      .toc {
+        background: #161b22;
+        box-shadow: none;
+      }
+
       .markdown-body {
         background: #161b22;
         box-shadow: none;
@@ -115,6 +171,16 @@
 
       .markdown-body code {
         background: #30363d;
+      }
+
+      .markdown-body h2 {
+        border-top-color: rgba(255,255,255,0.10);
+      }
+
+      .toTop {
+        background: #161b22;
+        border-color: rgba(255,255,255,.12);
+        color: #c9d1d9;
       }
     }
 
@@ -132,6 +198,11 @@
 
       .project-subtitle {
         font-size: 1.05rem;
+      }
+
+      .toc {
+        padding: 14px 14px;
+        border-radius: 10px;
       }
 
       .markdown-body {
@@ -156,9 +227,7 @@
 
     <!-- 프로젝트 정보 -->
     <header>
-      <div class="project-title">
-        LLM 프로젝트
-      </div>
+      <div class="project-title">LLM 프로젝트</div>
 
       <div class="project-subtitle">
         LLM에 대한 연구 및 교내 플랫폼(SOONGIL_LOG) 개발
@@ -169,13 +238,124 @@
       </div>
     </header>
 
+    <!-- 목차 -->
+    <nav id="toc" class="toc" aria-label="목차">
+      <div class="toc-title">목차</div>
+      <ol class="toc-list"></ol>
+    </nav>
+
     <!-- Markdown 본문 -->
-    <main class="markdown-body">
-      <md-block src="./readme.md">
+    <main class="markdown-body" id="content">
+      <md-block id="md" src="./readme.md">
         `README.md` 파일을 불러오는 중
       </md-block>
     </main>
 
   </div>
+
+  <!-- 맨 위로 -->
+  <button id="toTop" class="toTop" aria-label="맨 위로">↑</button>
+
+  <script>
+    // 한글/특수문자 포함 제목도 안전하게 id로 바꾸기
+    const slugify = (s) => s
+      .trim()
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s-]/gu, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+
+    function buildTOC() {
+      const tocWrap = document.getElementById("toc");
+      const toc = document.querySelector("#toc .toc-list");
+      const main = document.querySelector(".markdown-body");
+      if (!tocWrap || !toc || !main) return;
+
+      const headings = main.querySelectorAll("h2, h3");
+      toc.innerHTML = "";
+
+      if (!headings.length) {
+        tocWrap.style.display = "none";
+        return;
+      } else {
+        tocWrap.style.display = "block";
+      }
+
+      // 중복 id 방지용
+      const used = new Set();
+
+      headings.forEach(h => {
+        let id = h.id || slugify(h.textContent);
+        if (!id) id = "sec-" + Math.random().toString(36).slice(2);
+
+        // 중복이면 숫자 붙이기
+        let base = id;
+        let n = 2;
+        while (used.has(id) || document.getElementById(id)) {
+          id = base + "-" + n++;
+        }
+        used.add(id);
+
+        h.id = id;
+
+        const li = document.createElement("li");
+        li.className = (h.tagName === "H3") ? "lvl-3" : "lvl-2";
+
+        const a = document.createElement("a");
+        a.href = "#" + id;
+        a.textContent = h.textContent;
+
+        li.appendChild(a);
+        toc.appendChild(li);
+      });
+
+      // 부드러운 스크롤
+      document.querySelectorAll('#toc a').forEach(a => {
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          const id = a.getAttribute('href').slice(1);
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          history.replaceState(null, "", "#" + id);
+        });
+      });
+    }
+
+    // README 로딩 실패 대비(계속 "불러오는 중" 남는 상황 방지)
+    function fallbackIfReadmeMissing() {
+      const md = document.getElementById("md");
+      if (!md) return;
+
+      const txt = (md.textContent || "").trim();
+      const hasRendered = md.querySelectorAll("h1,h2,h3,p,ul,ol,pre,blockquote,table").length > 0;
+
+      if (!hasRendered && txt.includes("불러오는 중")) {
+        md.innerHTML = `
+          <h2>문서를 불러오지 못했어요</h2>
+          <p><code>readme.md</code> 파일이 같은 폴더에 있는지, 파일명이 정확히 일치하는지 확인해 주세요.</p>
+          <p>예: <code>readme.md</code> / <code>README.md</code> 대소문자도 구분됩니다.</p>
+        `;
+      }
+    }
+
+    // 맨 위로 버튼
+    const btn = document.getElementById("toTop");
+    window.addEventListener("scroll", () => {
+      btn.style.display = (window.scrollY > 400) ? "block" : "none";
+    });
+    btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+    // md-block 렌더가 비동기라서 여러 번 갱신
+    window.addEventListener("load", () => {
+      buildTOC();
+      setTimeout(buildTOC, 250);
+      setTimeout(buildTOC, 900);
+
+      setTimeout(fallbackIfReadmeMissing, 2500);
+    });
+  </script>
 </body>
 </html>
+
+
